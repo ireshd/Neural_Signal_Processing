@@ -50,7 +50,13 @@ docker run --rm -v "%cd%/data:/app/data" neural-signal-dsp python src/adc_sim.py
 
 ## Viewing Output Files
 
-Generated plots and data files are saved to the `./data` directory, which is mounted as a volume. You can view them directly on your host machine.
+Generated plots and CSV data files are saved to the `./data/outputs` directory, which is mounted as a volume. You can view them directly on your host machine.
+
+**Output files include:**
+- PNG plots (signal visualizations)
+- CSV data files (signal data, spike times, waveforms, statistics)
+
+See `CSV_OUTPUT_FORMAT.md` for details on CSV file formats.
 
 ## Interactive Development
 
@@ -67,7 +73,25 @@ docker run -it --rm -v "$(pwd):/app" neural-signal-dsp /bin/bash
 
 This gives you a shell inside the container where you can run Python scripts and test code.
 
-## Running the Complete Pipeline
+## Running Examples
+
+### Signal Generator with CSV Export
+
+```bash
+docker-compose run neural-dsp python src/signal_gen.py
+```
+
+This will generate:
+- PNG plots in `data/outputs/neural_signal_demo.png`
+- CSV data files in `data/outputs/*.csv`
+
+### CSV Export Examples
+
+```bash
+docker-compose run neural-dsp python examples/csv_export_example.py
+```
+
+### Complete Pipeline
 
 Once all modules are implemented:
 

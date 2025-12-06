@@ -12,6 +12,7 @@ services:
       - ./data:/app/data
       # Mount source code for development (optional)
       - ./src:/app/src
+      - ./examples:/app/examples
     environment:
       - MPLBACKEND=Agg
       - PYTHONUNBUFFERED=1

@@ -1,0 +1,261 @@
+AI GENERATED FILE
+
+# Neural Signal Acquisition & Real-Time DSP Pipeline (Software Simulation)
+
+A complete software simulation of a **neural data acquisition and real-time DSP pipeline**, inspired by architectures used in brain–computer interface (BCI) systems.
+This project generates synthetic neural signals, simulates ADC sampling, applies real-time digital signal processing (DSP), detects spikes, and visualizes the results.
+
+The design mirrors real embedded Cortex-M firmware systems with DMA-style buffering, interrupt-driven processing, and block-based DSP, making it highly relevant for embedded and neural engineering roles.
+
+---
+
+## Features
+
+* **Neural signal generator**
+
+  * Background noise
+  * Low-frequency drift
+  * Action potential (spike) waveforms
+  * Configurable firing rates
+  * CSV data export for analysis
+
+* **ADC simulation**
+
+  * 10–20 kHz sampling
+  * 12–16 bit quantization
+  * Optional jitter and saturation behavior
+
+* **Real-time DSP pipeline**
+
+  * Band-pass filtering (300–3000 Hz)
+  * 60 Hz notch filter
+  * RMS / energy tracking
+  * Spike detection (adaptive threshold)
+
+* **Embedded-style architecture**
+
+  * DMA-like circular buffer
+  * Interrupt-style callback processing
+  * Block-by-block deterministic DSP
+  * Timing and latency measurement
+  * Overflow and safety handling (simulated watchdog)
+
+* **Visualization & Data Export**
+
+  * Waveform plots
+  * Filtered vs raw signals
+  * Spike markers
+  * Firing-rate over time
+  * FFT / spectrograms
+  * CSV export (signal data, spike times, waveforms, statistics)
+
+---
+
+## System Architecture
+
+### High-Level Pipeline
+
+1. Generate synthetic neural data (noise + drift + spikes)
+2. Sample the signal using a simulated ADC
+3. Store samples in a circular DMA buffer
+4. Trigger "ISR" processing callbacks on new data
+5. Apply DSP filters
+6. Detect spikes and compute features
+7. Log and visualize the results
+
+### Architecture Diagram (Markdown-Friendly)
+
+```
+Neural Signal Model  -->  ADC Simulation  -->  DMA Buffer  -->  DSP Pipeline  -->  Visualization
+(noise, drift, spikes)      (quantize)        (circular)    (filters, spikes)   (plots)
+```
+
+---
+
+## 1. Neural Signal Simulation
+
+Example components:
+
+```python
+noise = 0.05 * np.random.randn(N)
+drift = 0.2 * np.sin(2 * np.pi * 1 * t)  # 1 Hz drift
+neural_signal = noise + drift
+```
+
+Spike waveforms are injected at random firing times to simulate neuron action potentials.
+
+---
+
+## 2. ADC Simulation
+
+Simulates quantization, sampling rate, and optional noise/jitter.
+
+```python
+adc_resolution = 12
+quantized = np.round(neural_signal * (2**adc_resolution)) / (2**adc_resolution)
+```
+
+---
+
+## 3. DMA-Style Circular Buffer
+
+Imitates a typical Cortex-M DMA ADC driver:
+
+```python
+buffer = np.zeros(buffer_size)
+write_idx = 0
+
+def dma_isr_callback(block):
+    process_block(block)
+```
+
+---
+
+## 4. DSP Processing
+
+### Band-Pass Filter (300–3000 Hz)
+
+```python
+b, a = butter(3, [300/fs*2, 3000/fs*2], btype='band')
+filtered = lfilter(b, a, block)
+```
+
+### Notch Filter (60 Hz)
+
+```python
+b, a = iirnotch(60 / (fs/2), Q=30)
+notched = lfilter(b, a, filtered)
+```
+
+### Spike Detection
+
+Adaptive thresholding:
+
+```python
+sigma = np.median(np.abs(notched)) / 0.6745
+threshold = 4 * sigma
+spike_indices = np.where(notched > threshold)[0]
+```
+
+---
+
+## 5. Visualization
+
+Plots include:
+
+* Raw and filtered waveforms
+* Spike detections
+* Power spectral density
+* Firing-rate timeline
+
+Example:
+
+```python
+plt.plot(raw_signal)
+plt.plot(filtered_signal)
+plt.scatter(spikes, filtered_signal[spikes], color='red')
+```
+
+---
+
+## Project Structure
+
+```
+neural-dsp-sim/
+│
+├── src/
+│   ├── signal_gen.py
+│   ├── adc_sim.py
+│   ├── dma_buffer.py
+│   ├── dsp_filters.py
+│   ├── spike_detect.py
+│   ├── realtime_loop.py
+│   └── visualize.py
+│
+├── data/
+│   └── spike_templates/
+│
+├── tests/
+│   └── dsp_benchmarks.py
+│
+└── README.md
+```
+
+---
+
+## Installation
+
+```bash
+pip install numpy scipy matplotlib pyqtgraph
+```
+
+---
+
+## Running the Simulation
+
+```bash
+python src/realtime_loop.py
+```
+
+Or run the signal generator demo:
+
+```bash
+python src/signal_gen.py
+```
+
+---
+
+## Data Export
+
+All generated signals can be exported to CSV format for analysis in external tools (Excel, MATLAB, R, Python, etc.).
+
+**Exported Files:**
+* `neural_signal_data.csv` - Complete time-series data
+* `neural_signal_spike_times.csv` - Spike timing information
+* `spike_waveform_template.csv` - Spike waveform templates
+* `neural_signal_summary.csv` - Summary statistics
+
+See `CSV_OUTPUT_FORMAT.md` for detailed format documentation and `examples/csv_export_example.py` for usage examples.
+
+---
+
+## Example Outputs
+
+(add images or GIFs here after implementation)
+
+* Raw vs filtered signal
+* Spike raster diagram
+* FFT of synthetic neural data
+* Real-time scrolling waveform
+* Block processing latency logs
+
+---
+
+## Why This Project Matters
+
+This project demonstrates:
+
+* Real-time DSP concepts used in neural implants
+* Embedded firmware architecture (DMA, interrupts, latency control)
+* Signal processing fundamentals (filters, thresholding, RMS)
+* Systems thinking under timing constraints
+
+It is directly relevant to:
+
+* Neural interface engineering
+* Embedded DSP roles
+* Biomedical signal processing
+* Low-latency embedded systems
+
+---
+
+## Future Improvements
+
+* BLE or UART streaming simulation
+* On-device (fixed-point) DSP emulation
+* Real spike sorting (PCA, clustering)
+* FPGA port of the DSP pipeline
+* Real neural dataset benchmarking
+
+---
+

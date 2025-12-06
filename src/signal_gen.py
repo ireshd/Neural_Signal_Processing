@@ -284,6 +284,101 @@ class NeuralSignalGenerator:
             all_spike_times.append(spike_times)
         
         return t, complete_signal, all_spike_times
+    
+    def export_to_csv(self,
+                     time: np.ndarray,
+                     signal: np.ndarray,
+                     spike_times: np.ndarray,
+                     spike_indices: List[int],
+                     output_dir: str = 'data/outputs',
+                     prefix: str = 'neural_signal') -> dict:
+        """
+        Export generated signal data to CSV files.
+        
+        Args:
+            time: Time array in seconds
+            signal: Signal amplitude array
+            spike_times: Array of spike times in seconds
+            spike_indices: List of spike sample indices
+            output_dir: Directory to save CSV files
+            prefix: Prefix for output filenames
+            
+        Returns:
+            Dictionary with paths to all exported files
+        """
+        import os
+        
+        # Create output directory
+        os.makedirs(output_dir, exist_ok=True)
+        
+        exported_files = {}
+        
+        # 1. Export complete signal data
+        spike_marker = np.zeros(len(signal))
+        spike_marker[spike_indices] = 1.0
+        signal_data = np.column_stack((time, signal, spike_marker))
+        signal_path = os.path.join(output_dir, f'{prefix}_data.csv')
+        np.savetxt(signal_path, signal_data, delimiter=',',
+                  header='time_s,amplitude,spike_marker', comments='')
+        exported_files['signal_data'] = signal_path
+        
+        # 2. Export spike times
+        if len(spike_times) > 0:
+            spike_data = np.column_stack((spike_times, spike_indices[:len(spike_times)]))
+            spike_path = os.path.join(output_dir, f'{prefix}_spike_times.csv')
+            np.savetxt(spike_path, spike_data, delimiter=',',
+                      header='spike_time_s,spike_index', comments='', fmt=['%.6f', '%d'])
+            exported_files['spike_times'] = spike_path
+        
+        # 3. Export summary statistics
+        summary_path = os.path.join(output_dir, f'{prefix}_summary.csv')
+        duration = time[-1] if len(time) > 0 else 0
+        with open(summary_path, 'w') as f:
+            f.write('parameter,value,unit\n')
+            f.write(f'duration,{duration},s\n')
+            f.write(f'sampling_frequency,{self.fs},Hz\n')
+            f.write(f'num_samples,{len(signal)},count\n')
+            f.write(f'num_spikes,{len(spike_times)},count\n')
+            f.write(f'firing_rate,{len(spike_times)/duration if duration > 0 else 0:.2f},Hz\n')
+            f.write(f'noise_amplitude,{self.noise_amplitude},V\n')
+            f.write(f'drift_amplitude,{self.drift_amplitude},V\n')
+            f.write(f'drift_frequency,{self.drift_freq},Hz\n')
+            f.write(f'signal_mean,{np.mean(signal):.6f},V\n')
+            f.write(f'signal_std,{np.std(signal):.6f},V\n')
+            f.write(f'signal_min,{np.min(signal):.6f},V\n')
+            f.write(f'signal_max,{np.max(signal):.6f},V\n')
+        exported_files['summary'] = summary_path
+        
+        return exported_files
+    
+    def export_waveform_to_csv(self,
+                              spike_type: str = 'biphasic',
+                              output_dir: str = 'data/outputs',
+                              filename: str = 'spike_waveform_template.csv') -> str:
+        """
+        Export spike waveform template to CSV.
+        
+        Args:
+            spike_type: Type of spike waveform
+            output_dir: Directory to save CSV file
+            filename: Output filename
+            
+        Returns:
+            Path to exported file
+        """
+        import os
+        
+        os.makedirs(output_dir, exist_ok=True)
+        
+        spike_waveform = self.generate_spike_waveform(spike_type)
+        t_spike_s = np.arange(len(spike_waveform)) / self.fs
+        waveform_data = np.column_stack((t_spike_s, spike_waveform))
+        
+        output_path = os.path.join(output_dir, filename)
+        np.savetxt(output_path, waveform_data, delimiter=',',
+                  header='time_s,amplitude', comments='')
+        
+        return output_path
 
 
 def demo():
@@ -346,9 +441,27 @@ def demo():
     output_path = os.path.join(output_dir, 'neural_signal_demo.png')
     plt.savefig(output_path, dpi=150)
     
+    # Export data to CSV files using the built-in methods
+    print("\n=== Exporting Data to CSV ===")
+    
+    # Export signal data, spike times, and summary
+    exported_files = gen.export_to_csv(t, signal, spike_times, spike_indices, 
+                                       output_dir=output_dir, prefix='neural_signal')
+    print(f"✓ Signal data saved to: {exported_files['signal_data']}")
+    if 'spike_times' in exported_files:
+        print(f"✓ Spike times saved to: {exported_files['spike_times']}")
+    print(f"✓ Summary statistics saved to: {exported_files['summary']}")
+    
+    # Export spike waveform template
+    waveform_path = gen.export_waveform_to_csv(spike_type='biphasic', output_dir=output_dir)
+    print(f"✓ Spike waveform template saved to: {waveform_path}")
+    
+    print(f"\n=== Summary ===")
     print(f"Generated {len(spike_times)} spikes in {duration} seconds")
     print(f"Average firing rate: {len(spike_times)/duration:.1f} Hz")
     print(f"Plot saved to: {output_path}")
+    print(f"Total samples: {len(signal):,}")
+    print(f"Total CSV files exported: {len(exported_files) + 1}")
     
     # Try to show plot if interactive backend is available
     try:
