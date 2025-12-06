@@ -57,7 +57,21 @@ Open CSV files in Excel, Python, MATLAB, or any spreadsheet software:
 
 See `CSV_OUTPUT_FORMAT.md` for detailed format information.
 
-## Step 4: Run Advanced Examples
+## Step 4: Run the ADC Simulator
+
+Try the ADC simulation:
+
+```bash
+docker-compose run neural-dsp python src/adc_sim.py
+```
+
+**What happens:**
+1. Generates neural signal at 100 kHz (analog)
+2. Samples at 20 kHz with 8-bit, 12-bit, and 16-bit ADCs
+3. Compares quantization effects
+4. Saves plots and CSV data
+
+## Step 5: Run Advanced Examples
 
 Try the CSV export examples:
 
@@ -71,9 +85,22 @@ This generates:
 - Different spike waveform types
 - Batch processing (5 trials)
 
+Try the ADC examples:
+
+```bash
+docker-compose run neural-dsp python examples/adc_example.py
+```
+
+This demonstrates:
+- Resolution comparison (8-16 bits)
+- Timing jitter effects
+- Signal saturation
+- ADC noise impact
+- Realistic neural recording setup
+
 All outputs are saved to `data/outputs/` directory.
 
-## Step 5: Analyze Your Data
+## Step 6: Analyze Your Data
 
 ### Python
 
@@ -154,14 +181,24 @@ exported = gen.export_to_csv(t, signal, spike_times, spike_indices,
 
 ## Common Commands
 
-**Generate signal:**
+**Generate neural signal:**
 ```bash
 docker-compose run neural-dsp python src/signal_gen.py
 ```
 
-**Run examples:**
+**Simulate ADC:**
+```bash
+docker-compose run neural-dsp python src/adc_sim.py
+```
+
+**Run signal examples:**
 ```bash
 docker-compose run neural-dsp python examples/csv_export_example.py
+```
+
+**Run ADC examples:**
+```bash
+docker-compose run neural-dsp python examples/adc_example.py
 ```
 
 **Interactive Python shell:**
@@ -209,12 +246,32 @@ The Docker container uses a non-interactive backend by default. To see plots:
 1. Save them to files (default behavior) ✓
 2. Or run outside Docker: `python src/signal_gen.py`
 
+## Step 7: Run Tests (Optional)
+
+Validate that everything works correctly:
+
+```bash
+docker-compose run neural-dsp python testbench/run_all_tests.py
+```
+
+This runs 100+ tests covering:
+- Signal generation correctness
+- ADC conversion accuracy
+- Integration pipeline
+- Edge cases and error handling
+
+Expected output:
+```
+✓ ALL TESTS PASSED! System validated and ready for use.
+```
+
 ## Next Steps
 
 1. **Explore parameters** - Try different firing rates, noise levels, spike types
 2. **Batch processing** - Generate multiple trials for statistical analysis
-3. **Build the full pipeline** - Implement ADC simulation, DSP filters, spike detection
+3. **Build the full pipeline** - Implement DMA buffer, DSP filters, spike detection
 4. **Custom analysis** - Load CSV files into your favorite analysis tool
+5. **Run tests** - Validate functionality with comprehensive test suite
 
 ## Need Help?
 
